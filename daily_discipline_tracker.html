@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DisciplineOS</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#060b14;--bg2:#0d1826;--bg3:#112240;
+  --accent:#4fc3f7;--accent2:#0288d1;--accent3:#38bdf8;
+  --gold:#f59e0b;--green:#10b981;--red:#ef4444;--purple:#a78bfa;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#475569;
+  --border:#1e3a5f;--border2:#2d5a8e;
+  --card:#0d1826;--card2:#112240;
+  --glow:rgba(79,195,247,0.15);
+  --font:'Space Grotesk',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r:12px;--r2:8px;--r3:20px;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;overflow-x:hidden;font-size:14px;}
+
+/* ANIMATED BG */
+.ambient{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:hidden;}
+.orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.06;animation:drift 20s infinite alternate ease-in-out;}
+.orb1{width:400px;height:400px;background:#4fc3f7;top:-100px;left:-100px;animation-delay:0s;}
+.orb2{width:300px;height:300px;background:#0288d1;bottom:100px;right:-50px;animation-delay:-7s;}
+.orb3{width:250px;height:250px;background:#a78bfa;top:50%;left:40%;animation-delay:-14s;}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}100%{transform:translate(40px,30px) scale(1.1)}}
+
+/* LAYOUT */
+.app{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:16px 16px 80px;}
+
+/* TOP BAR */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 0 20px;}
+.logo{font-size:18px;font-weight:700;letter-spacing:-0.5px;color:var(--text);}
+.logo span{color:var(--accent);}
+.live-time{font-family:var(--mono);font-size:13px;color:var(--accent);background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.2);padding:6px 12px;border-radius:var(--r2);}
+
+/* HERO STATS */
+.hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;transition:all 0.3s;}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.stat-label{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+.stat-val{font-size:24px;font-weight:700;color:var(--text);}
+.stat-val.accent{color:var(--accent);}
+.stat-val.gold{color:var(--gold);}
+.stat-val.green{color:var(--green);}
+.stat-bar{height:3px;background:var(--border);border-radius:2px;margin-top:8px;overflow:hidden;}
+.stat-bar-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+
+/* MAIN PROGRESS RING */
+.main-progress{display:flex;gap:12px;margin-bottom:16px;}
+.progress-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:20px;display:flex;align-items:center;gap:20px;flex:1;}
+.ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0;}
+.ring-wrap svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:6;}
+.ring-fill{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1s cubic-bezier(0.4,0,0.2,1);}
+.ring-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+.ring-pct{font-size:16px;font-weight:700;color:var(--accent);line-height:1;}
+.ring-sub{font-size:9px;color:var(--text2);}
+.progress-info{flex:1;}
+.progress-title{font-size:15px;font-weight:600;margin-bottom:4px;}
+.progress-sub{font-size:12px;color:var(--text2);}
+.next-block{display:flex;align-items:center;gap:8px;margin-top:8px;padding:8px 10px;background:rgba(79,195,247,0.06);border:1px solid rgba(79,195,247,0.15);border-radius:var(--r2);}
+.next-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(1.4)}}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r3);padding:4px;}
+.tab{flex:1;padding:8px 12px;border:none;background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;font-weight:500;border-radius:16px;cursor:pointer;transition:all 0.2s;}
+.tab.active{background:var(--bg3);color:var(--accent);box-shadow:0 0 0 1px var(--border2);}
+.tab:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.04);}
+
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:8px;}
+.block-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;transition:all 0.3s;cursor:pointer;}
+.block-card:hover{border-color:var(--border2);transform:translateY(-1px);}
+.block-card.active{border-color:rgba(79,195,247,0.5);box-shadow:0 0 20px rgba(79,195,247,0.1);}
+.block-card.important{border-left:3px solid var(--accent);}
+.block-card.completed{border-color:rgba(16,185,129,0.3);opacity:0.7;}
+.block-header{display:flex;align-items:center;gap:12px;padding:12px 16px;}
+.block-time{font-family:var(--mono);font-size:11px;color:var(--accent);min-width:95px;font-weight:500;}
+.block-icon{width:32px;height:32px;border-radius:var(--r2);display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--bg3);flex-shrink:0;}
+.block-title{font-size:13px;font-weight:600;flex:1;}
+.block-badge{font-size:10px;padding:3px 8px;border-radius:10px;font-weight:600;}
+.badge-imp{background:rgba(79,195,247,0.15);color:var(--accent);border:1px solid rgba(79,195,247,0.3);}
+.badge-done{background:rgba(16,185,129,0.15);color:var(--green);}
+.badge-now{background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);animation:badgepulse 2s infinite;}
+@keyframes badgepulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.block-progress{height:2px;background:var(--border);margin:0 16px 8px;border-radius:1px;overflow:hidden;}
+.block-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--green));border-radius:1px;transition:width 0.5s;}
+
+/* TASK LIST */
+.task-list{padding:0 16px 14px;border-top:1px solid var(--border);margin-top:4px;}
+.task-list-header{display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;}
+.task-list-title{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);font-weight:600;}
+.add-task-row{display:flex;gap:8px;margin-bottom:10px;}
+.task-input{flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:13px;padding:7px 12px;border-radius:var(--r2);outline:none;transition:border-color 0.2s;}
+.task-input::placeholder{color:var(--text3);}
+.task-input:focus{border-color:rgba(79,195,247,0.5);}
+.btn-add{background:var(--accent2);border:none;color:#fff;font-family:var(--font);font-size:13px;font-weight:600;padding:7px 14px;border-radius:var(--r2);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.btn-add:hover{background:var(--accent);transform:scale(1.02);}
+.task-item{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(30,58,95,0.5);transition:all 0.3s;animation:fadeIn 0.3s ease;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.task-item:last-child{border-bottom:none;}
+.task-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s;flex-shrink:0;}
+.task-check:hover{border-color:var(--green);}
+.task-check.done{background:var(--green);border-color:var(--green);}
+.task-check.done::after{content:"✓";color:#fff;font-size:10px;font-weight:700;}
+.task-text{flex:1;font-size:13px;transition:all 0.3s;}
+.task-text.done{color:var(--text3);text-decoration:line-through;}
+.task-pri{font-size:10px;padding:2px 7px;border-radius:8px;font-weight:600;}
+.pri-high{background:rgba(239,68,68,0.15);color:var(--red);}
+.pri-med{background:rgba(245,158,11,0.15);color:var(--gold);}
+.pri-low{background:rgba(16,185,129,0.15);color:var(--green);}
+.task-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;transition:all 0.2s;line-height:1;}
+.task-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+
+/* ANALYTICS */
+.analytics{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ana-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;}
+.ana-title{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--text2);margin-bottom:14px;font-weight:600;}
+.heatmap{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.heat-cell{aspect-ratio:1;border-radius:4px;background:var(--border);transition:all 0.3s;}
+.heat-cell.h1{background:rgba(79,195,247,0.25);}
+.heat-cell.h2{background:rgba(79,195,247,0.5);}
+.heat-cell.h3{background:rgba(79,195,247,0.75);}
+.heat-cell.h4{background:var(--accent);}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:80px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar{width:100%;border-radius:3px 3px 0 0;background:linear-gradient(to top,var(--accent2),var(--accent));min-height:4px;transition:height 0.8s cubic-bezier(0.4,0,0.2,1);}
+.bar-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.streak-row{display:flex;gap:4px;flex-wrap:wrap;}
+.streak-dot{width:14px;height:14px;border-radius:3px;background:var(--border);}
+.streak-dot.on{background:var(--green);}
+.streak-dot.today{background:var(--gold);box-shadow:0 0 8px rgba(245,158,11,0.5);}
+.focus-score-ring{display:flex;justify-content:center;align-items:center;padding:8px 0;}
+
+/* FOCUS MODE */
+.focus-mode{display:none;position:fixed;inset:0;background:rgba(6,11,20,0.97);z-index:100;flex-direction:column;align-items:center;justify-content:center;backdrop-filter:blur(20px);}
+.focus-mode.open{display:flex;}
+.focus-title{font-size:32px;font-weight:700;color:var(--text);margin-bottom:8px;text-align:center;}
+.focus-sub{font-size:14px;color:var(--text2);margin-bottom:40px;text-align:center;}
+.focus-timer{font-family:var(--mono);font-size:72px;font-weight:700;color:var(--accent);margin-bottom:40px;text-shadow:0 0 40px rgba(79,195,247,0.3);letter-spacing:4px;}
+.focus-btns{display:flex;gap:12px;}
+.btn-focus{padding:12px 28px;border-radius:var(--r3);font-family:var(--font);font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all 0.2s;}
+.btn-start{background:var(--accent);color:#000;}
+.btn-start:hover{background:var(--accent3);transform:scale(1.03);}
+.btn-stop{background:var(--bg3);color:var(--text);border:1px solid var(--border2);}
+.btn-stop:hover{background:var(--border);transform:scale(1.03);}
+.focus-progress{width:200px;height:4px;background:var(--border);border-radius:2px;margin-bottom:40px;overflow:hidden;}
+.focus-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear;}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:rgba(6,11,20,0.9);backdrop-filter:blur(20px);border-top:1px solid var(--border);display:flex;justify-content:center;gap:0;z-index:50;padding:0 16px;}
+.nav-btn{flex:1;max-width:80px;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0;border:none;background:none;color:var(--text2);font-family:var(--font);font-size:10px;cursor:pointer;transition:all 0.2s;}
+.nav-btn.active{color:var(--accent);}
+.nav-btn:hover{color:var(--text);}
+.nav-icon{font-size:20px;line-height:1;}
+
+/* MOTIVATIONAL BANNER */
+.moti-banner{background:linear-gradient(135deg,rgba(17,34,64,0.8),rgba(2,136,209,0.2));border:1px solid rgba(79,195,247,0.2);border-radius:var(--r);padding:14px 18px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
+.moti-icon{font-size:24px;}
+.moti-text{font-size:13px;color:var(--text2);line-height:1.5;}
+.moti-text strong{color:var(--text);display:block;font-size:14px;margin-bottom:2px;}
+
+/* COMPLETION OVERLAY */
+.completion-overlay{display:none;position:fixed;inset:0;background:rgba(6,11,20,0.85);z-index:200;align-items:center;justify-content:center;}
+.completion-overlay.show{display:flex;}
+.completion-card{background:var(--bg2);border:1px solid rgba(16,185,129,0.4);border-radius:20px;padding:40px;text-align:center;max-width:320px;animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes popIn{from{opacity:0;transform:scale(0.7)}to{opacity:1;transform:scale(1)}}
+.completion-emoji{font-size:56px;margin-bottom:16px;}
+.completion-title{font-size:22px;font-weight:700;color:var(--green);margin-bottom:8px;}
+.completion-sub{font-size:13px;color:var(--text2);margin-bottom:24px;}
+.btn-close-comp{background:var(--green);color:#000;border:none;font-family:var(--font);font-size:14px;font-weight:700;padding:12px 32px;border-radius:var(--r3);cursor:pointer;transition:all 0.2s;}
+.btn-close-comp:hover{transform:scale(1.04);}
+
+/* FOCUS BTN IN BLOCK */
+.focus-trigger{font-size:11px;padding:4px 10px;background:rgba(79,195,247,0.1);border:1px solid rgba(79,195,247,0.3);border-radius:8px;color:var(--accent);cursor:pointer;transition:all 0.2s;font-family:var(--font);font-weight:600;}
+.focus-trigger:hover{background:rgba(79,195,247,0.2);}
+
+/* SETTINGS */
+.settings-section{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:10px;}
+.settings-title{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text);}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(30,58,95,0.4);}
+.settings-row:last-child{border-bottom:none;}
+.settings-label{font-size:13px;color:var(--text2);}
+.toggle{width:40px;height:22px;background:var(--border);border-radius:11px;cursor:pointer;position:relative;transition:background 0.3s;}
+.toggle.on{background:var(--accent2);}
+.toggle::after{content:"";position:absolute;width:16px;height:16px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform 0.3s;}
+.toggle.on::after{transform:translateX(18px);}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .hero{grid-template-columns:1fr 1fr;}.hero .stat-card:last-child{display:none;}
+  .analytics{grid-template-columns:1fr;}
+  .focus-timer{font-size:52px;}
+  .main-progress{flex-direction:column;}
+  .tabs .tab{font-size:11px;padding:7px 6px;}
+}
+</style>
+</head>
+<body>
+
+<div class="ambient">
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+</div>
+
+<div class="app" id="app">
+  <div class="topbar">
+    <div class="logo">Discipline<span>OS</span></div>
+    <div class="live-time" id="liveTime">--:-- --</div>
+  </div>
+
+  <div class="moti-banner" id="motiBanner">
+    <div class="moti-icon">🔥</div>
+    <div class="moti-text">
+      <strong id="motiTitle">Champions are made in the quiet moments.</strong>
+      <span id="motiSub">Every block you complete compounds into your future self.</span>
+    </div>
+  </div>
+
+  <!-- HERO STATS -->
+  <div class="hero">
+    <div class="stat-card">
+      <div class="stat-label">Daily Progress</div>
+      <div class="stat-val accent" id="progressPct">0%</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="progressBar" style="width:0%"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Tasks Done</div>
+      <div class="stat-val green" id="tasksDone">0/0</div>
+      <div class="stat-bar"><div class="stat-bar-fill" id="tasksBar" style="width:0%;background:linear-gradient(90deg,#059669,#10b981)"></div></div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Day Streak</div>
+      <div class="stat-val gold">🔥 7</div>
+      <div class="stat-bar"><div class="stat-bar-fill" style="width:70%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div>
+    </div>
+  </div>
+
+  <!-- MAIN PROGRESS -->
+  <div class="main-progress">
+    <div class="progress-card">
+      <div class="ring-wrap">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle class="ring-bg" cx="40" cy="40" r="32"/>
+          <circle class="ring-fill" id="mainRing" cx="40" cy="40" r="32" stroke-dasharray="201" stroke-dashoffset="201"/>
+        </svg>
+        <div class="ring-center">
+          <div class="ring-pct" id="ringPct">0%</div>
+          <div class="ring-sub">done</div>
+        </div>
+      </div>
+      <div class="progress-info">
+        <div class="progress-title" id="currentBlockTitle">Loading schedule...</div>
+        <div class="progress-sub" id="currentBlockSub">Calculating your current block</div>
+        <div class="next-block" id="nextBlockRow">
+          <div class="next-dot"></div>
+          <span style="font-size:12px;color:var(--text2)">Next: <span id="nextBlockName" style="color:var(--text)">—</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('timeline')">⏱ Timeline</button>
+    <button class="tab" onclick="switchTab('analytics')">📊 Analytics</button>
+    <button class="tab" onclick="switchTab('settings')">⚙️ Settings</button>
+  </div>
+
+  <!-- TIMELINE TAB -->
+  <div id="tab-timeline">
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <!-- ANALYTICS TAB -->
+  <div id="tab-analytics" style="display:none;">
+    <div class="analytics">
+      <div class="ana-card">
+        <div class="ana-title">Weekly Heatmap</div>
+        <div class="heatmap" id="heatmap"></div>
+        <div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
+          <span style="font-size:10px;color:var(--text3)">Less</span>
+          <div style="width:12px;height:12px;border-radius:2px;background:var(--border)"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:rgba(79,195,247,0.25)"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:rgba(79,195,247,0.5)"></div>
+          <div style="width:12px;height:12px;border-radius:2px;background:var(--accent)"></div>
+          <span style="font-size:10px;color:var(--text3)">More</span>
+        </div>
+      </div>
+      <div class="ana-card">
+        <div class="ana-title">Weekly Completion</div>
+        <div class="chart-bars" id="weeklyChart"></div>
+        <div style="display:flex;gap:6px;justify-content:space-between;margin-top:6px;">
+          <span style="font-size:9px;color:var(--text3)">Mon</span>
+          <span style="font-size:9px;color:var(--text3)">Tue</span>
+          <span style="font-size:9px;color:var(--text3)">Wed</span>
+          <span style="font-size:9px;color:var(--text3)">Thu</span>
+          <span style="font-size:9px;color:var(--text3)">Fri</span>
+          <span style="font-size:9px;color:var(--text3)">Sat</span>
+          <span style="font-size:9px;color:var(--text3)">Sun</span>
+        </div>
+      </div>
+      <div class="ana-card">
+        <div class="ana-title">21-Day Streak</div>
+        <div class="streak-row" id="streakDots"></div>
+        <div style="margin-top:12px;font-size:12px;color:var(--text2)">Current streak: <span style="color:var(--gold);font-weight:700;">7 days 🔥</span></div>
+        <div style="font-size:12px;color:var(--text2);margin-top:4px">Best streak: <span style="color:var(--green);font-weight:700;">14 days</span></div>
+      </div>
+      <div class="ana-card">
+        <div class="ana-title">Focus Scores</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;color:var(--text2)">Discipline</span>
+              <span style="font-size:12px;color:var(--accent);font-weight:600;">84%</span>
+            </div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:84%"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;color:var(--text2)">Consistency</span>
+              <span style="font-size:12px;color:var(--green);font-weight:600;">71%</span>
+            </div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:71%;background:linear-gradient(90deg,#059669,#10b981)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;color:var(--text2)">Deep Work</span>
+              <span style="font-size:12px;color:var(--gold);font-weight:600;">92%</span>
+            </div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:92%;background:linear-gradient(90deg,#d97706,#f59e0b)"></div></div>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+              <span style="font-size:12px;color:var(--text2)">Physical</span>
+              <span style="font-size:12px;color:var(--purple);font-weight:600;">78%</span>
+            </div>
+            <div class="stat-bar"><div class="stat-bar-fill" style="width:78%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS TAB -->
+  <div id="tab-settings" style="display:none;">
+    <div class="settings-section">
+      <div class="settings-title">Notifications</div>
+      <div class="settings-row">
+        <span class="settings-label">Block reminders</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Focus mode auto-start</span>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Daily summary</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Appearance</div>
+      <div class="settings-row">
+        <span class="settings-label">Ambient animations</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row">
+        <span class="settings-label">Compact view</span>
+        <div class="toggle" onclick="this.classList.toggle('on')"></div>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">Data</div>
+      <div class="settings-row">
+        <span class="settings-label">Auto-save progress</span>
+        <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+      </div>
+      <div class="settings-row" style="cursor:pointer;" onclick="if(confirm('Reset all task data?')){resetAll();}">
+        <span class="settings-label" style="color:var(--red)">Reset all data</span>
+        <span style="font-size:18px;color:var(--red)">⚠</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-title">About DisciplineOS</div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.7;">
+        Version 1.0.0 · Built for elite performance.<br>
+        Your data is saved locally in your browser.<br>
+        <span style="color:var(--accent)">Designed for discipline-driven individuals.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOCUS MODE -->
+<div class="focus-mode" id="focusMode">
+  <div style="position:absolute;top:20px;right:20px;">
+    <button class="btn-stop" onclick="closeFocus()" style="font-size:20px;padding:8px 16px;">✕</button>
+  </div>
+  <div class="focus-title" id="focusTitle">Deep Focus</div>
+  <div class="focus-sub" id="focusSub">Stay locked in. Every minute counts.</div>
+  <div class="focus-timer" id="focusTimer">25:00</div>
+  <div class="focus-progress" style="width:260px;margin-bottom:24px;">
+    <div class="focus-progress-fill" id="focusProgressFill" style="width:0%"></div>
+  </div>
+  <div class="focus-btns">
+    <button class="btn-focus btn-start" id="focusStartBtn" onclick="toggleFocusTimer()">▶ Start Session</button>
+    <button class="btn-focus btn-stop" onclick="resetFocusTimer()">↺ Reset</button>
+  </div>
+  <div style="margin-top:30px;font-size:13px;color:var(--text3);text-align:center;">
+    Pomodoro • 25 min deep work + 5 min break
+  </div>
+</div>
+
+<!-- COMPLETION OVERLAY -->
+<div class="completion-overlay" id="completionOverlay">
+  <div class="completion-card">
+    <div class="completion-emoji">🎯</div>
+    <div class="completion-title">Task Complete!</div>
+    <div class="completion-sub" id="completionMsg">Keep the momentum going. Every checkmark is a rep for your future self.</div>
+    <button class="btn-close-comp" onclick="closeCompletion()">Keep Going →</button>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" onclick="showFocusMode()">
+    <span class="nav-icon">⚡</span>
+    <span>Focus</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('timeline');setNavActive(this)">
+    <span class="nav-icon">📋</span>
+    <span>Timeline</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('analytics');setNavActive(this)">
+    <span class="nav-icon">📊</span>
+    <span>Analytics</span>
+  </button>
+  <button class="nav-btn" onclick="switchTab('settings');setNavActive(this)">
+    <span class="nav-icon">⚙️</span>
+    <span>Settings</span>
+  </button>
+</div>
+
+<script>
+// ─── STATE ───────────────────────────────────────────────────────────────────
+const BLOCKS = [
+  {id:0,time:"8:00 AM",label:"Wake Up",icon:"🌅",important:false,duration:0,
+   tasks:[{id:"t0a",text:"Turn off alarm immediately",done:false,pri:"high"},{id:"t0b",text:"Drink a full glass of water",done:false,pri:"med"},{id:"t0c",text:"Do 10 deep breaths",done:false,pri:"low"}]},
+  {id:1,time:"8:00–9:00 AM",label:"Fresh + Breakfast",icon:"🍳",important:false,duration:60,
+   tasks:[{id:"t1a",text:"Brush teeth & wash face",done:false,pri:"high"},{id:"t1b",text:"Prepare healthy breakfast",done:false,pri:"high"},{id:"t1c",text:"Review today's goals",done:false,pri:"med"},{id:"t1d",text:"No phone during breakfast",done:false,pri:"med"}]},
+  {id:2,time:"9:30 AM–12:00 PM",label:"Study Session 1",icon:"📚",important:true,duration:150,
+   tasks:[{id:"t2a",text:"Review yesterday's notes (15 min)",done:false,pri:"high"},{id:"t2b",text:"Complete Chapter reading",done:false,pri:"high"},{id:"t2c",text:"Solve practice problems",done:false,pri:"high"},{id:"t2d",text:"Make summary notes",done:false,pri:"med"},{id:"t2e",text:"Take a 5-min break at 10:45",done:false,pri:"low"},{id:"t2f",text:"Review weak topics",done:false,pri:"med"}]},
+  {id:3,time:"12:00–1:00 PM",label:"Go Outside",icon:"🌤",important:false,duration:60,
+   tasks:[{id:"t3a",text:"Step outside for fresh air",done:false,pri:"high"},{id:"t3b",text:"Walk or light movement",done:false,pri:"med"},{id:"t3c",text:"Observe surroundings mindfully",done:false,pri:"low"}]},
+  {id:4,time:"1:00–2:00 PM",label:"Exercise & Workout",icon:"💪",important:true,duration:60,
+   tasks:[{id:"t4a",text:"Warm-up: 10 min cardio",done:false,pri:"high"},{id:"t4b",text:"Push-ups: 3 sets × 20",done:false,pri:"high"},{id:"t4c",text:"Pull-ups or rows: 3 sets",done:false,pri:"high"},{id:"t4d",text:"Core workout: planks + crunches",done:false,pri:"med"},{id:"t4e",text:"Squats & lunges: 3 sets",done:false,pri:"med"},{id:"t4f",text:"Cool-down & stretch: 5 min",done:false,pri:"low"}]},
+  {id:5,time:"2:00–3:00 PM",label:"Fresh + Bath",icon:"🚿",important:false,duration:60,
+   tasks:[{id:"t5a",text:"Take a refreshing bath",done:false,pri:"high"},{id:"t5b",text:"Skincare routine",done:false,pri:"med"},{id:"t5c",text:"Change into fresh clothes",done:false,pri:"low"}]},
+  {id:6,time:"3:00–5:00 PM",label:"Skill Learning",icon:"🎯",important:true,duration:120,
+   tasks:[{id:"t6a",text:"Open course or tutorial",done:false,pri:"high"},{id:"t6b",text:"Complete 1 lesson/module",done:false,pri:"high"},{id:"t6c",text:"Take notes & key concepts",done:false,pri:"high"},{id:"t6d",text:"Build or practice the skill",done:false,pri:"high"},{id:"t6e",text:"Test with a mini-project",done:false,pri:"med"},{id:"t6f",text:"Log what you learned",done:false,pri:"low"}]},
+  {id:7,time:"5:00–7:00 PM",label:"Evening Trip / Walk",icon:"🚶",important:false,duration:120,
+   tasks:[{id:"t7a",text:"Go for a refreshing walk",done:false,pri:"high"},{id:"t7b",text:"Listen to a podcast or audiobook",done:false,pri:"med"},{id:"t7c",text:"Reflect on the day so far",done:false,pri:"med"}]},
+  {id:8,time:"7:30–10:00 PM",label:"Study Session 2",icon:"📖",important:true,duration:150,
+   tasks:[{id:"t8a",text:"Review Skill Learning notes",done:false,pri:"high"},{id:"t8b",text:"Deep work: hard problems",done:false,pri:"high"},{id:"t8c",text:"Complete assignments/exercises",done:false,pri:"high"},{id:"t8d",text:"Watch educational video",done:false,pri:"med"},{id:"t8e",text:"Write daily learning journal",done:false,pri:"med"},{id:"t8f",text:"Plan tomorrow's study topics",done:false,pri:"low"}]},
+  {id:9,time:"10:00–11:00 PM",label:"Spoken English",icon:"🗣",important:false,duration:60,
+   tasks:[{id:"t9a",text:"Practice pronunciation (15 min)",done:false,pri:"high"},{id:"t9b",text:"Shadowing exercise",done:false,pri:"high"},{id:"t9c",text:"Learn 5 new vocabulary words",done:false,pri:"med"},{id:"t9d",text:"Record & review your speech",done:false,pri:"med"}]},
+  {id:10,time:"11:00 PM",label:"Sleep (8 Hours)",icon:"🌙",important:false,duration:480,
+   tasks:[{id:"t10a",text:"Prepare for sleep (no screens)",done:false,pri:"high"},{id:"t10b",text:"Write 3 gratitudes in journal",done:false,pri:"high"},{id:"t10c",text:"Set tomorrow's alarm",done:false,pri:"med"},{id:"t10d",text:"Deep sleep — no compromise",done:false,pri:"high"}]}
+];
+
+const QUOTES = [
+  {title:"Champions are made in quiet moments.",sub:"Every block you complete compounds into your future self."},
+  {title:"Your routine IS your identity.",sub:"Discipline repeated daily becomes who you are."},
+  {title:"Do the work while others sleep.",sub:"The gap between you and your goals is called effort."},
+  {title:"Each session is a brick.",sub:"You're building something unbreakable, one task at a time."},
+  {title:"Consistency beats intensity.",sub:"Show up today. Show up tomorrow. That's the formula."},
+  {title:"The best time to start was yesterday.",sub:"The second best time is right now — this block, this task."}
+];
+
+let state = {blocks:BLOCKS,openBlock:null,focusRunning:false,focusTime:25*60,focusMax:25*60,focusInterval:null};
+
+// Load from storage
+try{
+  const saved = localStorage.getItem('disciplineOS_v2');
+  if(saved){
+    const parsed = JSON.parse(saved);
+    // merge tasks only (keep structure)
+    parsed.blocks.forEach((sb,i)=>{
+      if(state.blocks[i]) state.blocks[i].tasks = sb.tasks || state.blocks[i].tasks;
+    });
+  }
+}catch(e){}
+
+function save(){
+  try{localStorage.setItem('disciplineOS_v2',JSON.stringify({blocks:state.blocks}));}catch(e){}
+}
+
+// ─── TIME UTILS ──────────────────────────────────────────────────────────────
+function getMinutes(){const n=new Date();return n.getHours()*60+n.getMinutes();}
+function parseTime(str){
+  const m=str.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!m)return null;
+  let h=parseInt(m[1]),mn=parseInt(m[2]),p=m[3].toUpperCase();
+  if(p==='PM'&&h!==12)h+=12;
+  if(p==='AM'&&h===12)h=0;
+  return h*60+mn;
+}
+function blockMinutes(b){
+  const parts=b.time.split('–');
+  const start=parseTime(parts[0].trim());
+  const end=parts[1]?parseTime(parts[1].trim()):null;
+  return{start,end};
+}
+function getCurrentBlock(){
+  const now=getMinutes();
+  let active=-1;
+  BLOCKS.forEach((b,i)=>{
+    const{start,end}=blockMinutes(b);
+    if(start===null)return;
+    if(end&&now>=start&&now<end)active=i;
+    else if(!end&&now>=start)active=i;
+  });
+  return active;
+}
+function getNextBlock(current){
+  for(let i=current+1;i<BLOCKS.length;i++){
+    const{start}=blockMinutes(BLOCKS[i]);
+    if(start!==null)return BLOCKS[i];
+  }
+  return BLOCKS[0];
+}
+
+// ─── PROGRESS ────────────────────────────────────────────────────────────────
+function calcProgress(){
+  let total=0,done=0;
+  state.blocks.forEach(b=>{b.tasks.forEach(t=>{total++;if(t.done)done++;});});
+  return total===0?0:Math.round(done/total*100);
+}
+function calcTaskStats(){
+  let total=0,done=0;
+  state.blocks.forEach(b=>{b.tasks.forEach(t=>{total++;if(t.done)done++;});});
+  return{total,done};
+}
+function updateStats(){
+  const pct=calcProgress();
+  const{total,done}=calcTaskStats();
+  document.getElementById('progressPct').textContent=pct+'%';
+  document.getElementById('progressBar').style.width=pct+'%';
+  document.getElementById('tasksDone').textContent=done+'/'+total;
+  document.getElementById('tasksBar').style.width=(total?Math.round(done/total*100):0)+'%';
+  // ring
+  const circ=201;
+  const offset=circ-(circ*pct/100);
+  document.getElementById('mainRing').style.strokeDashoffset=offset;
+  document.getElementById('ringPct').textContent=pct+'%';
+  // current block
+  const cur=getCurrentBlock();
+  if(cur>=0){
+    const b=BLOCKS[cur];
+    document.getElementById('currentBlockTitle').textContent=b.icon+' '+b.label;
+    document.getElementById('currentBlockSub').textContent='Currently active · '+b.time;
+    const next=getNextBlock(cur);
+    document.getElementById('nextBlockName').textContent=next.icon+' '+next.label;
+  } else {
+    document.getElementById('currentBlockTitle').textContent='🌙 Off Schedule';
+    document.getElementById('currentBlockSub').textContent='No active block right now';
+    document.getElementById('nextBlockName').textContent=BLOCKS[0].icon+' '+BLOCKS[0].label+' tomorrow';
+  }
+}
+
+// ─── CLOCK ───────────────────────────────────────────────────────────────────
+function updateClock(){
+  const n=new Date();
+  let h=n.getHours(),m=n.getMinutes(),s=n.getSeconds();
+  const am=h>=12?'PM':'AM';
+  h=h%12||12;
+  document.getElementById('liveTime').textContent=
+    String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+am;
+}
+
+// ─── TIMELINE RENDER ─────────────────────────────────────────────────────────
+function renderTimeline(){
+  const tl=document.getElementById('timeline');
+  const cur=getCurrentBlock();
+  tl.innerHTML='';
+  state.blocks.forEach((b,i)=>{
+    const doneTasks=b.tasks.filter(t=>t.done).length;
+    const pct=b.tasks.length?Math.round(doneTasks/b.tasks.length*100):0;
+    const isActive=cur===i;
+    const isOpen=state.openBlock===i;
+    const isComplete=pct===100&&b.tasks.length>0;
+
+    const div=document.createElement('div');
+    div.className='block-card'+(b.important?' important':'')+(isActive?' active':'')+(isComplete?' completed':'');
+    div.innerHTML=`
+      <div class="block-header" onclick="toggleBlock(${i})">
+        <span class="block-time">${b.time}</span>
+        <div class="block-icon">${b.icon}</div>
+        <div>
+          <div class="block-title">${b.label}</div>
+          <div style="font-size:11px;color:var(--text2)">${doneTasks}/${b.tasks.length} tasks · ${pct}%</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;align-items:center;">
+          ${b.important?'<span class="block-badge badge-imp">★ FOCUS</span>':''}
+          ${isActive?'<span class="block-badge badge-now">● NOW</span>':''}
+          ${isComplete?'<span class="block-badge badge-done">✓ DONE</span>':''}
+          ${b.important?`<button class="focus-trigger" onclick="event.stopPropagation();openFocus(${i})">⚡ Focus Mode</button>`:''}
+        </div>
+        <span style="font-size:18px;color:var(--text2);margin-left:8px;transition:transform 0.3s;transform:rotate(${isOpen?'90':'0'}deg)">›</span>
+      </div>
+      ${b.tasks.length?`<div class="block-progress"><div class="block-progress-fill" style="width:${pct}%"></div></div>`:''}
+    `;
+
+    if(isOpen){
+      const taskDiv=document.createElement('div');
+      taskDiv.className='task-list';
+      taskDiv.innerHTML=`
+        <div class="task-list-header">
+          <span class="task-list-title">Tasks for ${b.label}</span>
+        </div>
+        <div class="add-task-row">
+          <select id="priSel${i}" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;padding:7px 8px;border-radius:var(--r2);outline:none;">
+            <option value="high">🔴 High</option>
+            <option value="med">🟡 Med</option>
+            <option value="low">🟢 Low</option>
+          </select>
+          <input class="task-input" id="taskInp${i}" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask(${i})">
+          <button class="btn-add" onclick="addTask(${i})">+ Add</button>
+        </div>
+        <div id="taskItems${i}">
+          ${b.tasks.map(t=>`
+            <div class="task-item" id="ti_${t.id}">
+              <div class="task-check${t.done?' done':''}" onclick="toggleTask(${i},'${t.id}')"></div>
+              <span class="task-text${t.done?' done':''}">${t.text}</span>
+              <span class="task-pri pri-${t.pri}">${t.pri}</span>
+              <button class="task-del" onclick="deleteTask(${i},'${t.id}')">×</button>
+            </div>
+          `).join('')}
+        </div>
+      `;
+      div.appendChild(taskDiv);
+    }
+
+    tl.appendChild(div);
+  });
+}
+
+// ─── BLOCK ACTIONS ───────────────────────────────────────────────────────────
+function toggleBlock(i){
+  state.openBlock=state.openBlock===i?null:i;
+  renderTimeline();
+}
+function addTask(blockIdx){
+  const inp=document.getElementById('taskInp'+blockIdx);
+  const pri=document.getElementById('priSel'+blockIdx);
+  const text=inp.value.trim();
+  if(!text)return;
+  const id='t_'+Date.now();
+  state.blocks[blockIdx].tasks.push({id,text,done:false,pri:pri.value});
+  inp.value='';
+  save();renderTimeline();updateStats();
+}
+function deleteTask(blockIdx,taskId){
+  state.blocks[blockIdx].tasks=state.blocks[blockIdx].tasks.filter(t=>t.id!==taskId);
+  save();renderTimeline();updateStats();
+}
+function toggleTask(blockIdx,taskId){
+  const t=state.blocks[blockIdx].tasks.find(t=>t.id===taskId);
+  if(!t)return;
+  t.done=!t.done;
+  save();
+  if(t.done){showCompletion(t.text);}
+  renderTimeline();updateStats();
+}
+
+// ─── COMPLETION ──────────────────────────────────────────────────────────────
+const compMsgs=[
+  "Keep the momentum going! Every checkmark builds your future self.",
+  "Excellent! Discipline is just consistency, and you just proved it.",
+  "Task destroyed! You're building an unbreakable routine.",
+  "That's elite behavior. Don't stop now.",
+  "One step closer to the version of you that never gives up."
+];
+function showCompletion(taskText){
+  document.getElementById('completionMsg').textContent=compMsgs[Math.floor(Math.random()*compMsgs.length)];
+  const ov=document.getElementById('completionOverlay');
+  ov.classList.add('show');
+  setTimeout(()=>ov.classList.remove('show'),2500);
+}
+function closeCompletion(){document.getElementById('completionOverlay').classList.remove('show');}
+
+// ─── FOCUS MODE ──────────────────────────────────────────────────────────────
+function openFocus(blockIdx){
+  const b=BLOCKS[blockIdx];
+  document.getElementById('focusTitle').textContent=b.icon+' '+b.label;
+  document.getElementById('focusSub').textContent='Deep focus session · '+b.time;
+  showFocusMode();
+}
+function showFocusMode(){
+  document.getElementById('focusMode').classList.add('open');
+}
+function closeFocus(){
+  document.getElementById('focusMode').classList.remove('open');
+  if(state.focusRunning)clearInterval(state.focusInterval);
+  state.focusRunning=false;
+}
+function toggleFocusTimer(){
+  if(state.focusRunning){
+    clearInterval(state.focusInterval);
+    state.focusRunning=false;
+    document.getElementById('focusStartBtn').textContent='▶ Resume Session';
+  } else {
+    state.focusRunning=true;
+    document.getElementById('focusStartBtn').textContent='⏸ Pause';
+    state.focusInterval=setInterval(()=>{
+      if(state.focusTime<=0){
+        clearInterval(state.focusInterval);
+        state.focusRunning=false;
+        document.getElementById('focusTimer').textContent='Done! 🎉';
+        document.getElementById('focusStartBtn').textContent='▶ New Session';
+        return;
+      }
+      state.focusTime--;
+      updateFocusDisplay();
+    },1000);
+  }
+}
+function resetFocusTimer(){
+  clearInterval(state.focusInterval);
+  state.focusRunning=false;
+  state.focusTime=25*60;
+  updateFocusDisplay();
+  document.getElementById('focusStartBtn').textContent='▶ Start Session';
+}
+function updateFocusDisplay(){
+  const m=Math.floor(state.focusTime/60),s=state.focusTime%60;
+  document.getElementById('focusTimer').textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  const pct=Math.round((1-state.focusTime/state.focusMax)*100);
+  document.getElementById('focusProgressFill').style.width=pct+'%';
+}
+
+// ─── TABS ────────────────────────────────────────────────────────────────────
+function switchTab(name){
+  ['timeline','analytics','settings'].forEach(t=>{
+    document.getElementById('tab-'+t).style.display=t===name?'block':'none';
+  });
+  document.querySelectorAll('.tabs .tab').forEach((el,i)=>{
+    el.classList.toggle('active',['timeline','analytics','settings'][i]===name);
+  });
+}
+function setNavActive(el){
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ─── ANALYTICS ───────────────────────────────────────────────────────────────
+function renderAnalytics(){
+  // Heatmap (3 weeks × 7 days = 21 days)
+  const hm=document.getElementById('heatmap');
+  const levels=['','h1','h2','h3','h4'];
+  hm.innerHTML='';
+  for(let i=0;i<21;i++){
+    const cell=document.createElement('div');
+    const l=i<7?Math.floor(Math.random()*5):i<14?Math.floor(Math.random()*5):i<20?Math.floor(Math.random()*4+1):4;
+    cell.className='heat-cell'+(l?(' '+levels[l]):'');
+    cell.title='Day '+(i+1);
+    hm.appendChild(cell);
+  }
+  // Weekly bar chart
+  const wc=document.getElementById('weeklyChart');
+  const vals=[72,85,60,90,78,88,calcProgress()||45];
+  wc.innerHTML='';
+  vals.forEach((v,i)=>{
+    const col=document.createElement('div');
+    col.className='bar-col';
+    col.innerHTML=`<div class="bar" style="height:${v*0.8}%;${i===6?'background:linear-gradient(to top,var(--gold),#fbbf24)':''}"></div>`;
+    wc.appendChild(col);
+  });
+  // Streak dots
+  const sd=document.getElementById('streakDots');
+  sd.innerHTML='';
+  for(let i=0;i<21;i++){
+    const d=document.createElement('div');
+    const isOn=i<7||(i>=7&&i<14&&Math.random()>0.3);
+    d.className='streak-dot'+(i===20?' today':isOn?' on':'');
+    sd.appendChild(d);
+  }
+}
+
+// ─── MOTIVATIONAL QUOTE ──────────────────────────────────────────────────────
+function rotateMoti(){
+  const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('motiTitle').textContent=q.title;
+  document.getElementById('motiSub').textContent=q.sub;
+}
+
+// ─── RESET ───────────────────────────────────────────────────────────────────
+function resetAll(){
+  state.blocks.forEach(b=>b.tasks.forEach(t=>t.done=false));
+  save();renderTimeline();updateStats();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+updateClock();
+setInterval(updateClock,1000);
+setInterval(rotateMoti,30000);
+renderTimeline();
+updateStats();
+renderAnalytics();
+setTimeout(()=>{
+  updateStats();
+  // Auto-open current block
+  const cur=getCurrentBlock();
+  if(cur>=0){state.openBlock=cur;renderTimeline();}
+},100);
+</script>
+</body>
+</html>
